@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 
 	"github.com/fgrosse/prox"
@@ -92,37 +94,39 @@ func environment(path string) (prox.Environment, error) {
 	return env, err
 }
 
-func processes(env prox.Environment, procFileFlag string) ([]prox.Process, error) {
-	var (
-		f     *os.File
-		err   error
-		parse = prox.ParseProxFile
-	)
+func processes(env prox.Environment, path string) ([]prox.Process, error) {
+	var parser func(io.Reader, prox.Environment) ([]prox.Process, error)
 
-	if procFileFlag != "" {
-		// user has specified a path
-		logger.Debug("Reading processes from file specified via --procfile", zap.String("path", procFileFlag))
-		f, err = os.Open(procFileFlag)
-		if filepath.Base(procFileFlag) == "Procfile" {
-			parse = prox.ParseProcFile
-		}
-	} else {
-		// default to "Proxfile"
-		f, err = os.Open("Proxfile")
-		if os.IsNotExist(err) {
-			// no "Proxfile" but maybe we can open a "Procfile"
-			logger.Debug("Reading processes from Procfile")
-			parse = prox.ParseProcFile
-			f, err = os.Open("Procfile")
+	switch {
+	case path == "" && fileExists("Proxfile"):
+		logger.Debug("Reading processes from Proxfile")
+		path = "Proxfile"
+		parser = prox.ParseProxFile
+	case path == "" && fileExists("Procfile"):
+		logger.Debug("Reading processes from Procfile")
+		path = "Procfile"
+		parser = prox.ParseProcFile
+	case path != "":
+		logger.Debug("Reading processes from file specified via --procfile", zap.String("path", path))
+		if strings.HasPrefix(filepath.Base(path), "Procfile") {
+			parser = prox.ParseProcFile
 		} else {
-			logger.Debug("Reading processes from Proxfile")
+			parser = prox.ParseProxFile
 		}
+	default:
+		return nil, errors.New("no Proxfile or Procfile file found. Please specify a path with --procfile")
 	}
 
+	f, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open process file: %w", err)
 	}
 
 	defer f.Close()
-	return parse(f, env)
+	return parser(f, env)
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
 }

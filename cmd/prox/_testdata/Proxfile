@@ -1,0 +1,4 @@
+processes:
+  redis: bin/redis-server conf/redis.conf
+  server:   "php -S localhost:8080 app/web/index.php"
+  selenium: "java -jar /usr/local/bin/selenium-server-standalone.jar"
