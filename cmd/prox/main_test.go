@@ -1,12 +1,13 @@
 package main
 
 import (
+	"os"
+	"testing"
+
 	"github.com/fgrosse/prox"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
-	"os"
-	"testing"
 )
 
 func TestParseProcessesFile(t *testing.T) {
