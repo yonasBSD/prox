@@ -5,7 +5,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-TBA
+Nothing yet
+
+## [1.1.0] - 2024-07-13
+- Improve file name matching when determining parser for value of --procfile flag (fgrosse/prox#8)
+
+## [1.0.0] - 2023-03-10
+- v1 release
 
 ## [0.5.0] - 2018-12-09
 ### Fixed
