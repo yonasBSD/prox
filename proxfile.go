@@ -11,6 +11,13 @@ import (
 type Proxfile struct {
 	Version   string
 	Processes map[string]ProxfileProcess
+	Tags      map[string]struct {
+		Color     string
+		Condition struct {
+			Field string
+			Value string
+		}
+	}
 }
 
 type ProxfileProcess struct {
@@ -107,6 +114,15 @@ func ParseProxFile(reader io.Reader, env Environment) ([]Process, error) {
 		}
 
 		if p.Output.Format == "json" {
+			for tag, tagDef := range proxfile.Tags {
+				p.Output.TaggingRules = append(p.Output.TaggingRules, TaggingRule{
+					Tag:   tag,
+					Field: tagDef.Condition.Field,
+					Value: tagDef.Condition.Value,
+				})
+				p.Output.TagColors[tag] = tagDef.Color
+			}
+
 			for tag, tagDef := range pp.Tags {
 				p.Output.TaggingRules = append(p.Output.TaggingRules, TaggingRule{
 					Tag:   tag,
